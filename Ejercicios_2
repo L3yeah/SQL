@@ -1,0 +1,103 @@
+-- Apartado 1.- Consultas básicas
+/*1. Devuelve un listado con el primer apellido, segundo apellido y el nombre de todos los
+alumnos. El listado deberá estar ordenado alfabéticamente de menor a mayor por el
+primer apellido, segundo apellido y nombre.*/
+select apellido1,apellido2,nombre from persona
+where tipo = 'alumno'
+order by apellido1,apellido2,nombre
+/*2. Averigua el nombre y los dos apellidos de los alumnos que no han dado de alta su
+número de teléfono en la base de datos.*/
+select nombre,apellido1,apellido2 from persona
+where telefono is null
+--3. Devuelve el listado de los alumnos que nacieron en 1999.
+select * from persona
+where fecha_nacimiento like '1999%'
+
+--Apartado 2.- Consultas con iteración Inner, Left, Right
+--1. Devuelve un listado con los departamentos que no tienen profesores asociados.
+select a.* from departamento a left join profesor b
+on a.id = b.id_departamento
+where b.id_profesor is null
+--2. Devuelve un listado con los profesores que no imparten ninguna asignatura.
+select a.id_profesor from profesor a left join asignatura b
+on a.id_profesor = b.id_profesor
+where b.id is null
+--3. Devuelve un listado con las asignaturas que no tienen un profesor asignado.
+select * from asignatura
+where id_profesor is null
+/*4. Devuelve un listado con los datos de todas las alumnas que se han matriculado alguna
+vez en el Grado en Ingeniería Informática (Plan 2015).*/
+select a.* from persona a inner join alumno_se_matricula_asignatura b
+on a.id = b.id_alumno inner join asignatura c on b.id_asignatura = c.id
+where a.sexo = 'M' and c.id_grado = 4 
+/*5. Devuelve un listado con todas las asignaturas ofertadas en el Grado en Ingeniería
+Informática (Plan 2015).*/
+select * from asignatura
+where id_grado = 4 
+
+--Apartado 3.- Triggers
+/*1. Trigger que se desencadenara cuando realice la inserción de un registro en la tabla
+persona.*/
+create trigger ins1 ON persona
+For INSERT
+AS
+Begin
+	SET NOCOUNT ON;
+	select * from inserted 
+END
+GO
+
+/*2. Trigger que se activara al momento de eliminar un registro de la tabla grado. Regresar
+el mensaje al usuario si se elimino el registro de forma correcta.*/
+create trigger del ON grado
+For DELETE
+AS
+Begin
+	SET NOCOUNT ON;
+	select 'El registro ha sido eliminado de manera exitosa' as Msg
+END
+GO
+
+--Apartado 4.- Procedimientos Almacenados
+/*1. Devuelve un listado con el número de asignaturas que imparte cada profesor, deberá
+pasar por parámetro el id del profesor que se desea obtener.*/
+
+CREATE PROCEDURE Asignaturas_impartidas
+@id SMALLINT
+AS
+select * from asignatura
+where id_profesor = @id
+GO
+
+exec Asignaturas_impartidas 3
+
+--2. Devuelve el listado del total de alumnas que hay.
+
+create procedure total_Alumnas
+AS
+select * from persona
+where sexo = 'M' and tipo = 'alumno'
+GO
+
+exec total_Alumnas
+
+/*3. Deberá insertar un registro en la tabla de persona que será tipo profesor, deberá de
+declarar los parámetros necesarios en el procedimiento para realizar la inserción.
+Regresar el mensaje correspondiente a la acción que se realiza.*/
+
+create procedure insertar_Profe
+@id int,
+@nif varchar(9),
+@nombre varchar(25),
+@apellido1 varchar(50),
+@apellido2 varchar(50),
+@ciudad varchar(25),
+@direccion varchar(50),
+@telefono varchar(9),
+@fecha_nac date,
+@sexo varchar(1)
+AS
+insert into persona(id,nif,nombre,apellido1,apellido2,ciudad,direccion,telefono,fecha_nacimiento,sexo,tipo) values (@id,@nif,@nombre,@apellido1,@apellido2,@ciudad,@direccion,@telefono,@fecha_nac,@sexo,'profesor')
+GO
+
+exec insertar_Profe 50,'sdf4564','Lilia','Trujillo','Rivera','Colima','Jose Vasconcelos 463','123456789','1997-03-23','M'
